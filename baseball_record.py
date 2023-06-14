@@ -1,5 +1,5 @@
 import time
-
+import numpy as np
 from selenium import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.chrome.service import Service
@@ -38,7 +38,7 @@ def baseball_data_batter_record(driver):
         year_list = [x.strip() for x in driver.find_element(By.CLASS_NAME,'select03').text.split('\n') if len(x) > 1]
 
         category_data_list = []
-        for year in tqdm(year_list[:]):
+        for year in tqdm(year_list[:40]):
             driver.find_element(By.CLASS_NAME,'select03').click()
             xpath_format = '//option[@value="{year}"]'
             driver.find_element(By.XPATH,xpath_format.format(year = year)).click()
@@ -47,7 +47,7 @@ def baseball_data_batter_record(driver):
 
             temp_list = [x.split(' ') for x in driver.find_element(By.TAG_NAME, 'table').text.split('\n')]
             temp_data = pd.DataFrame(columns=temp_list[0])
-
+            # print(temp_data)
             for i,temp in enumerate(temp_list[1:]):
                 try:
                     temp_data.loc[i] = temp
@@ -61,9 +61,12 @@ def baseball_data_batter_record(driver):
                     time.sleep(1)
             temp_data['Year'] = year
             category_data_list.append(temp_data)
+            # print(category_data_list)
             time.sleep(1)
         category_data = pd.concat(category_data_list)
-        baseball_data.append(category_data)
+        baseball_data = category_data.to_csv("./KBOBaseball_batter.csv")
+
+
     return baseball_data
 
 def baseball_data_pitcher_record(driver):
@@ -76,7 +79,7 @@ def baseball_data_pitcher_record(driver):
         year_list = [x.strip() for x in driver.find_element(By.CLASS_NAME, 'select03').text.split('\n') if len(x) > 1]
 
         category_data_list = []
-        for year in tqdm(year_list[:]):
+        for year in tqdm(year_list[:40]):
             driver.find_element(By.CLASS_NAME, 'select03').click()
             xpath_format = '//option[@value="{year}"]'
             driver.find_element(By.XPATH, xpath_format.format(year=year)).click()
@@ -101,7 +104,7 @@ def baseball_data_pitcher_record(driver):
             category_data_list.append(temp_data)
             time.sleep(1)
         category_data = pd.concat(category_data_list)
-        baseball_data.append(category_data)
+        baseball_data = category_data.to_csv("./KBOBaseball_pitcher.csv")
     return baseball_data
 
 def baseball_data_defance_record(driver):
@@ -114,7 +117,7 @@ def baseball_data_defance_record(driver):
         year_list = [x.strip() for x in driver.find_element(By.CLASS_NAME, 'select03').text.split('\n') if len(x) > 1]
 
         category_data_list = []
-        for year in tqdm(year_list[:]):
+        for year in tqdm(year_list[:21]):
             driver.find_element(By.CLASS_NAME, 'select03').click()
             xpath_format = '//option[@value="{year}"]'
             driver.find_element(By.XPATH, xpath_format.format(year=year)).click()
@@ -139,7 +142,7 @@ def baseball_data_defance_record(driver):
             category_data_list.append(temp_data)
             time.sleep(1)
         category_data = pd.concat(category_data_list)
-        baseball_data.append(category_data)
+        baseball_data = category_data.to_csv("./KBOBaseball_defance.csv")
     return baseball_data
 
 def baseball_data_runner_record(driver):
@@ -152,7 +155,7 @@ def baseball_data_runner_record(driver):
         year_list = [x.strip() for x in driver.find_element(By.CLASS_NAME, 'select03').text.split('\n') if len(x) > 1]
 
         category_data_list = []
-        for year in tqdm(year_list[:]):
+        for year in tqdm(year_list[:21]):
             driver.find_element(By.CLASS_NAME, 'select03').click()
             xpath_format = '//option[@value="{year}"]'
             driver.find_element(By.XPATH, xpath_format.format(year=year)).click()
@@ -177,11 +180,13 @@ def baseball_data_runner_record(driver):
             category_data_list.append(temp_data)
             time.sleep(1)
         category_data = pd.concat(category_data_list)
-        baseball_data.append(category_data)
+        baseball_data = category_data.to_csv("./KBOBaseball_runner.csv")
     return baseball_data
 
 URL = 'https://www.koreabaseball.com/Record/Player/{category}'
-
+# URL2 = 'https://www.koreabaseball.com/Record/Player/{category}'
+# URL3 = 'https://www.koreabaseball.com/Record/Player/{category}'
+# URL4 = 'https://www.koreabaseball.com/Record/Player/{category}'
 
 category_list = ['HitterBasic/Basic1.aspx']
 category_list2 = ['PitcherBasic/Basic1.aspx']
@@ -192,20 +197,15 @@ driver1 = crawaling_get_driver(URL, True)
 driver2 = crawaling_get_driver(URL, True)
 driver3 = crawaling_get_driver(URL, True)
 driver4 = crawaling_get_driver(URL, True)
-time.sleep(1)
 
 batter_list = baseball_data_batter_record(driver1)
 pitcher_list = baseball_data_pitcher_record (driver2)
-defanceplayer_list = baseball_data_defance_record (driver3)
+defance_list = baseball_data_defance_record (driver3)
 runner_list = baseball_data_runner_record (driver4)
 
-pdList1 = pd.DataFrame(batter_list , columns=['순위', '선수명', '팀명', 'AVG','G','PA','AB','R','H','2B','3B','HR','TB','RBI','SAC','SF'])
-pdList2 = pd.DataFrame(pitcher_list , columns=['순위', '선수명', '팀명', 'ERA','G','W','L','SV','HLD','WPCT','IP','H','HR','BB','HBP','SO','R','ER','WHIP'])
-pdList3 = pd.DataFrame(defanceplayer_list , columns=['순위', '선수명', '팀명', 'POS','G','GS','IP','E','PKO','PO','A','DP','FPCT','PB','SB','CS','CS%'])
-pdList4 = pd.DataFrame(runner_list, columns=['순위', '선수명', '팀명', 'G','SBA','SB','CS','SB%','OOB','PKO'])
 
 
-pdListAll = pd.concat([pdList1,pdList2,pdList3,pdList4],ignore_index=True)
 
-pdListAll.to_excel("./KBO Record.xlsx")
+
+
 
